@@ -26,7 +26,7 @@ public:
   ntype  deltra, deltra_cls,deltra_rot, deltra_2; // parameter of MC moves
   int Nx, Ny;
   ntype theta;
-  ntype gamma;
+
   simpars()
     {
       nx = 2;  // number of particles along each direction
@@ -54,7 +54,6 @@ public:
       k = 30.0;
       drmax = 1.5;
       theta = 1.0;
-      gamma = 1.0;
 
     }
 
@@ -89,7 +88,7 @@ public:
             {"theta", [&](const std::string& value) { theta = std::stod(value); }},
             {"deltra_cls", [&](const std::string& value) { deltra_cls = std::stod(value); }},
             {"deltra_rot", [&](const std::string& value) { deltra_rot = std::stod(value); }},
-            {"gamma", [&](const std::string& value) { gamma = std::stod(value); }}
+        
 
         };
 
