@@ -16,12 +16,12 @@ savemeasure= 200
 outstps= 1000
 T = 1.0
 deltra = 0.1
-deltra_2 = 0.5
 deltra_cls = 0.5
 deltra_rot = 0.785398
 k = 20
 drmax = 2.5
 Ny = 0
 Nx = 20
-theta = 0.675
-gamma = 5
+theta = 0.675 
+
+
