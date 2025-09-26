@@ -57,6 +57,8 @@ public:
 
     }
 
+
+//creating a loading function to be used in sim.hpp 
  void loadParameters(const std::string& filename) {
         // Map parameter names to their references
         std::unordered_map<std::string, std::function<void(const std::string&)>> paramMap = {
