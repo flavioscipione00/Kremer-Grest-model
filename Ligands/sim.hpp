@@ -40,28 +40,6 @@ protected:
   std::unordered_map<int, std::unordered_set<int>>  g4_bond_map;
   std::unordered_map<int, std::unordered_set<int>>  g4_map_old;
 
- //if opt=1 calculate energies only for i < j
- /* ntype calcenergyi(int i, int opt=0)
-    {
-      int j;
-      ntype enei=0.0;
-      for (j=0; j < parts.size(); j++) // pars.Np è il numero totale di particelle
-        {
-          if (opt==1 && i >= j)
-            continue;
-          if (i==j)
-            continue;
-          // la classe particelle deve implementare un metodo vij per il calcolo dell'energia d'interazione
-          enei += parts[i].vijLJ(parts[j], pars.L);
-          if (parts[i].polymer_id == parts[j].polymer_id && abs(i-j) == 1) enei += parts[i].vijFENE(parts[j], pars.L);
-
-          // pars.L è un vettore con i lati del box
-        }
-
-      enei += bending_energy(i);
-
-      return enei;
-    } */
 
 
     ntype bending_energy(int i)
@@ -97,21 +75,6 @@ protected:
         return ene;
     }
 
-
-
-
-
-
- /* ntype totenergy()
-    {
-      ntype ene=0.0;
-      for (auto i=0; i < parts.size(); i++)
-        {
-          ene+=calcenergyi(i, 1);
-        }
-
-      return ene;
-    } */
 
   void pbc(int i)
     {
@@ -149,8 +112,6 @@ public:
 
 
 
-
-
   void init_cells(void) {
     cell_nx = 20;
     cell_ny = 20;
@@ -172,8 +133,6 @@ public:
     head_backup.assign(n_cell, -1);
 
   }
-
-
 
 
 
@@ -333,7 +292,6 @@ void update_neighboring_ligands(int g4_index)
 
 void update_binding_state(int i)
 {
-    // ⛔ Ignora i non-ligandi
     if (parts[i].polymer_type != 1) return;
 
     const double r_min = pars.r_sq;
@@ -349,7 +307,7 @@ void update_binding_state(int i)
 
         if (dist > r_cutoff)
         {
-            // Rimuovi il legame
+         
             parts[i].bound_to = -1;
 
             // Rimuovi i dalla lista di j_old
@@ -358,7 +316,7 @@ void update_binding_state(int i)
         }
         else
         {
-            return;  // rimane legato, non cerchiamo altri G4
+            return; 
         }
     }
 
@@ -384,7 +342,7 @@ void update_binding_state(int i)
         for (int j = head[index]; j >= 0; j = linked_list[j])
         {
             if (j == i) continue;
-            if (parts[j].polymer_type != 0) continue; // solo G4
+            if (parts[j].polymer_type != 0) continue; 
 
             pvector<ntype, 3> Dr = parts[i].r - parts[j].r;
             Dr -= pars.L.mulcw(rint(Dr.divcw(pars.L)));
@@ -400,7 +358,7 @@ void update_binding_state(int i)
 
     if (j_best != -1)
     {
-        //parts[j_best].bond_store();  // opzionale
+        
         parts[i].bound_to = j_best;
         g4_bond_map[j_best].insert(i);
 
@@ -447,7 +405,7 @@ ntype energy_linked_cells(int i, int opt = 0, std::unordered_set<int>* cluster_s
                     bool same_type = (parts[i].polymer_type == parts[j].polymer_type);
 
 
-                    // Per opt == 2 (cluster move): ignora interazioni intra-catena
+
                     if (opt == 2 && same_chain) continue;
 
 
@@ -462,10 +420,10 @@ ntype energy_linked_cells(int i, int opt = 0, std::unordered_set<int>* cluster_s
 
             }
 
-    // ✅ Add bonded FENE energy exactly once
+
     if (opt != 2)
     {
-       if(parts[i].polymer_type == 1) // Solo per i monomeri di tipo 1
+       if(parts[i].polymer_type == 1) 
         {
             if (i > 0 && parts[i].polymer_id == parts[i - 1].polymer_id) {
                 ene += parts[i].vijFENE_sym(parts[i - 1], pars.L);
@@ -556,10 +514,7 @@ void set_poly(ntype alpha, ntype L, int count, std::vector<monomer> &parts, int 
 {
     pvector<ntype,3> dr = {0.0, 0.0, 0.0};
     pvector<ntype,3> prev_dr = {0.0, 0.0, 1.0};
-   // ntype sg = rng.ranf();
-   // sg >= 0.5? prev_dr *= -1.0 : prev_dr *= 1.0;
 
-    // Primo bond verticale fisso
     parts[count+1].r = parts[count].r + prev_dr * L;
     parts[count+1].polymer_id = parts[count].polymer_id;
     pbc(count+1);
@@ -591,7 +546,7 @@ void assign_properties_to_all(std::vector<monomer>& parts) {
       else if(ptype == 1)
           parts[i].set_sigma(pars.sigma_2);
       else
-          parts[i].set_sigma(0.0); // Per altri tipi di polimero, se necessario
+          parts[i].set_sigma(0.0);
 
       parts[i].set_mass(pars.mass);
       parts[i].set_rcut((ptype == 0) ? pars.rc_1 : pars.rc_2);
@@ -634,19 +589,19 @@ void prepare_initial_conf_stacked()
 
     // === RESCALING AUTOMATICO DELLO SPACING ===
 
-    ntype spacing_0 = 1.15;            // spacing di riferimento
-    ntype volume_scaling = 100.0;        // QUI puoi mettere il tuo fattore di volume
+    ntype spacing_0 = 1.15;            
+    ntype volume_scaling = 100.0;        
     int N_site = total_sites;
 
     ntype spacing = spacing_0 * pow(volume_scaling, 1.0/3.0);
     COUT("spacing: " << spacing << "\n");
 
-    ntype lb = pars.lb; // lunghezza di bond usata per il set_poly
+    ntype lb = pars.lb;
     ntype lb_2 = pars.lb_2;
 
     // === Calcolo dimensione box ===
     pars.L = {1.0, 1.0, 1.0};
-    pars.L *= spacing * pars.Nx ;  // Questo resta come nel tuo codice
+    pars.L *= spacing * pars.Nx ;  
 
     std::vector<int> polymer_types(total_sites, pars.Nx);
     std::fill(polymer_types.begin() + long_sites, polymer_types.end(), -pars.Ny);
@@ -672,7 +627,6 @@ void prepare_initial_conf_stacked()
                 int type = polymer_types[index];
 
                 if (type > 0) {
-                    // Polimero lungo
                     int polymer_length = type;
                     pol[p_id].resize(polymer_length);
                     parts[count].r = pos;
@@ -687,11 +641,11 @@ void prepare_initial_conf_stacked()
                     p_id++;
                 }
                 else {
-                    // m polimeri corti distinti
+
                     int polymer_length = -type;
                     int a = 0;
                     ntype sg = rng.ranf();
-                    //sg >= 0.5 ? a = 1 : a = -1;
+
 
                     for (int m = 0; m < mult; m++) {
                         int current_pid = p_id + m;
@@ -724,19 +678,19 @@ void store(int i)
 {
     parts[i].store();
 
-    if (parts[i].polymer_type == 1)  // Ligando
+    if (parts[i].polymer_type == 1) 
     {
         parts[i].bond_store();
 
         int g4 = parts[i].bound_to;
         if (g4 != -1 && g4_bond_map.count(g4))
-            g4_map_old[g4] = g4_bond_map[g4];  // Copia l'intero set
+            g4_map_old[g4] = g4_bond_map[g4];  
     }
     else  // G4
     {
         if (g4_bond_map.count(i))
         {
-            g4_map_old[i] = g4_bond_map[i];  // Copia l'intero set
+            g4_map_old[i] = g4_bond_map[i]; 
 
             for (int lig : g4_bond_map[i])
                 parts[lig].bond_store();
@@ -750,14 +704,13 @@ void restore(int i)
 {
     parts[i].restore();
 
-    if (parts[i].polymer_type == 1)  // Ligando
+    if (parts[i].polymer_type == 1)  
     {
         int g4_new = parts[i].bound_to;
         int g4_old = parts[i].bound_to_old;
 
-        parts[i].bond_restore();  // ripristina bound_to = g4_old
+        parts[i].bond_restore();  
 
-        // Rimuovi il ligando dalla mappa del G4 a cui si era legato (g4_new)
         if (g4_new != -1 && g4_new != g4_old && g4_bond_map.count(g4_new))
         {
             g4_bond_map[g4_new].erase(i);
@@ -766,14 +719,13 @@ void restore(int i)
                 g4_bond_map.erase(g4_new);
         }
 
-        // Ripristina la lista vecchia se esiste
         if (g4_old != -1 && g4_map_old.count(g4_old))
         {
             g4_bond_map[g4_old] = g4_map_old[g4_old];
         }
     }
 
-    else  // G4
+    else  
     {
         if (g4_map_old.count(i))
         {
@@ -796,15 +748,13 @@ void restore(int i)
 template<typename particle_type>
 class mcsim: public sim<particle_type>
 {
-  // for calc_acceptance_and_adjust: total trial moves and accepted ones
-  // for calculating acceptance rates.
+
   using bc=sim<particle_type>;
   using bc::parts, bc::pars, bc::pbc, bc::pol, bc::long_polymers, bc::short_polymers, bc::total_polymers,
         bc::save_mgl_snapshot, bc::Identity,
         bc::particle_to_cells, bc::energy_linked_cells, bc::totenergy_linked_cells,bc::init_cells,bc::update_cells,bc::store_cell_lists,bc::restore_cell_lists, bc::cell_size,bc::linked_list,bc::head,bc::cell_ny,bc::cell_nx,bc::cell_nz,
          bc::update_binding_state, bc::update_neighboring_ligands, bc::store, bc::restore,bc::g4_bond_map,bc::g4_map_old;
 
-  // counters used to calculate acceptance rates
   long int tot_tra, tra_rej,tot_tra_2, tra_rej_2, tra_rej_cls, tot_tra_cls, tot_tra_rot_cls,tra_rej_rot_cls;
 
 
@@ -813,20 +763,20 @@ class mcsim: public sim<particle_type>
     ntype ene = 0.0;
     ntype ene_new = 0.0;
 
-    store_cell_lists();  // per sicurezza totale sulle celle
+    store_cell_lists();  
     bool is_ligand_cluster = (parts[pol[i][0]].polymer_type == 1);
 
-    // Backup energia, posizioni, binding, celle
+
     for(int j = 0; j < pol[i].size(); j++)
     {
         ene += energy_linked_cells(pol[i][j], 2);
         store(pol[i][j]);
     }
 
-    // Trial move (rotazione del cluster)
+
     alpha_rot_cls(i);
 
-    // Aggiorna celle per TUTTI i monomeri
+
 for (int j = 0; j < pol[i].size(); j++)
 {
     pbc(pol[i][j]);
@@ -834,7 +784,7 @@ for (int j = 0; j < pol[i].size(); j++)
 
     if (is_ligand_cluster)
     {
-        update_binding_state(pol[i][j]);  // ligando → aggiorna sé stesso
+        update_binding_state(pol[i][j]);  
     }
     else
     {
@@ -846,12 +796,12 @@ if (it != g4_bond_map.end()) {
             std::cerr << "❌ cls_move: indice k invalido = " << k
                       << " da G4 = " << pol[i][j]
                       << " (parts.size() = " << parts.size() << ")\n";
-            continue;  // evita crash
+            continue;  
         }
         update_binding_state(k);
     }
 }
-        update_neighboring_ligands(pol[i][j]);  // Aggiorna i ligandi vicini
+        update_neighboring_ligands(pol[i][j]);
     }
 
     ene_new += energy_linked_cells(pol[i][j], 2);
@@ -884,17 +834,16 @@ if (it != g4_bond_map.end()) {
           std::vector<pvector<ntype,3>> unwrapped;
           unwrapped.resize(pol[i].size());
 
-          // Unwrap: primo monomero come origine
           unwrapped[0] = parts[pol[i][0]].r;
 
           for (int j = 1; j < pol[i].size(); j++)
           {
               pvector<ntype,3> d = parts[pol[i][j]].r - parts[pol[i][j - 1]].r;
-              d -= pars.L.mulcw(rint(d.divcw(pars.L))); // MIC tra monomeri consecutivi
+              d -= pars.L.mulcw(rint(d.divcw(pars.L))); 
               unwrapped[j] = unwrapped[j - 1] + d;
           }
 
-          // Calcola il centro di massa della catena unwrapped
+
           for (int j = 0; j < pol[i].size(); j++)
               r0 += unwrapped[j];
           r0 /= ntype(pol[i].size());
@@ -905,7 +854,7 @@ if (it != g4_bond_map.end()) {
       oy = o(1);
       oz = o(2);
 
-      // Skew-symmetric matrix (Omega)
+
       Omega(0,0) = 0;
       Omega(0,1) = -oz;
       Omega(0,2) = oy;
@@ -959,7 +908,7 @@ void acc_rot_cls(int i, ntype eno, ntype ene_new)
 
       if(parts[pol[i][0]].polymer_type == 0)
         {
-          update_neighboring_ligands(pol[i][j]);  // Aggiorna i ligandi vicini
+          update_neighboring_ligands(pol[i][j]);  /
         }
       }
     tra_rej_rot_cls++;
@@ -972,11 +921,11 @@ void acc_rot_cls(int i, ntype eno, ntype ene_new)
 }
 
 
-  // //sto implementando solo la trial move (o-->n) per NTV
+
   void alpha(int i)
     {
 
-   //   std::cout << "alpha" << "\n";
+
       pvector<ntype,3> delr;
       delr ={pars.deltra*2.0*(rng.ranf()-0.5),  pars.deltra*2.0*(rng.ranf()-0.5),
            pars.deltra*2.0*(rng.ranf()-0.5)};
@@ -985,7 +934,7 @@ void acc_rot_cls(int i, ntype eno, ntype ene_new)
 
 if (parts[i].polymer_type == 1)
 {
-    update_binding_state(i);  // ligando → aggiorna sé stesso
+    update_binding_state(i);  
 }
 else
 {
@@ -1002,7 +951,7 @@ if (it != g4_bond_map.end()) {
 }
 
 
-    update_neighboring_ligands(i);  // Aggiorna i ligandi vicini
+    update_neighboring_ligands(i);  
    }
 
     }
@@ -1022,7 +971,7 @@ if (it != g4_bond_map.end()) {
         restore(i);
         if(parts[i].polymer_type == 0)
           {
-            update_neighboring_ligands(i);  // Aggiorna i ligandi vicini
+            update_neighboring_ligands(i); 
           }
 
        if(parts[i].polymer_type == 0)   
@@ -1064,9 +1013,9 @@ void cls_move(int i)
     ntype ene_new = 0.0;
     bool is_ligand_cluster = (parts[pol[i][0]].polymer_type == 1);
 
-    store_cell_lists();  // per sicurezza totale sulle celle complete
+    store_cell_lists();  
 
-    // Backup energia, posizioni, binding, celle
+
     for(int j = 0; j < pol[i].size(); j++)
     {
         ene += energy_linked_cells(pol[i][j], 2);
@@ -1075,10 +1024,10 @@ void cls_move(int i)
 
 
 
-    // Trial move (traslazione)
+
     alpha_cls(i);
 
-    // Aggiorna celle per TUTTI i monomeri
+  
     for(int j = 0; j < pol[i].size(); j++)
     {
         pbc(pol[i][j]);
@@ -1086,7 +1035,7 @@ void cls_move(int i)
 
    if (is_ligand_cluster)
     {
-        update_binding_state(pol[i][j]);  // ligando → aggiorna sé stesso
+        update_binding_state(pol[i][j]);  
     }
     else
     {
@@ -1103,7 +1052,7 @@ if (it != g4_bond_map.end()) {
         update_binding_state(k);
     }
 }
-              update_neighboring_ligands(pol[i][j]);  // Aggiorna i ligandi vicini
+              update_neighboring_ligands(pol[i][j]);  
     }
 
 
@@ -1145,7 +1094,7 @@ if (it != g4_bond_map.end()) {
            restore(pol[i][j]);
            if(parts[pol[i][0]].polymer_type == 0)
             {
-              update_neighboring_ligands(pol[i][j]);  // Aggiorna i ligandi vicini
+              update_neighboring_ligands(pol[i][j]); 
             }
           }
 
@@ -1242,7 +1191,7 @@ if (it != g4_bond_map.end()) {
  public:
   void run(int c)
     {
-      // ciclo sui passi MC
+
       int i, t, ip;
       tot_tra = tra_rej = tot_tra_2 = tra_rej_2 = tra_rej_cls =tot_tra_cls = tot_tra_rot_cls = tra_rej_rot_cls = 0;
       init_measures();
