@@ -908,7 +908,7 @@ void acc_rot_cls(int i, ntype eno, ntype ene_new)
 
       if(parts[pol[i][0]].polymer_type == 0)
         {
-          update_neighboring_ligands(pol[i][j]);  /
+          update_neighboring_ligands(pol[i][j]); 
         }
       }
     tra_rej_rot_cls++;
