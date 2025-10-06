@@ -1,0 +1,22 @@
+nx = 5
+ny = 5
+nz = 5
+sigma = 1.0
+epsilon= 1.2
+rc = 1.12246
+seed=0
+mass=1.0
+adjstps = 1000
+maxadjstps = 10000
+totsteps = 701000
+T = 1.0
+deltra = 0.1
+deltra_cls = 0.5
+deltra_rot = 0.785398
+k = 20
+drmax = 2.5
+Ny = 0
+Nx = 20
+theta = 0.675 
+
+
