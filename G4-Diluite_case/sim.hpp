@@ -320,7 +320,7 @@ ntype energy_linked_cells(int i, ntype rc, int opt = 0)
                     Dr -= pars.L.mulcw(rint(Dr.divcw(pars.L)));
                     ntype dist_sq = Dr.norm() * Dr.norm();
 
-                    if( dist_sq > pars.rc * pars.rc *pars.sigma * pars.sigma) continue;
+                    if( dist_sq > pars.rc * pars.rc) continue;
 
 
 
